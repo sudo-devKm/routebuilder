@@ -1,6 +1,7 @@
 {
+  "$schema": "http://json.schemastore.org/nodemon",
   "ignore": [".git", "node_modules/", "dist/", "coverage/"],
   "watch": ["src/*", "dist/*"],
   "ext": "js,ts,json",
-  "exec": "ts-node"
+  "exec": "tsx -r tsconfig-paths/register"
 }

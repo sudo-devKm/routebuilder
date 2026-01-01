@@ -1,144 +1,162 @@
 // *** import packages ***
-import { NextFunction, RequestHandler, Response, Router } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 
 // *** Types ***
-import { IRequest } from './types/base.type';
 import { IEntity } from './interfaces/entity.interface';
-
-// *** Constants ***
 
 // *** Classes ***
 import Generator from './generator';
 import { ReqTypes } from './constants/base.constant';
-import { Route } from '@interfaces/route.interface';
+import { AppRequestHandler, AppRoute } from '@/types';
+import { StatusCodes } from 'http-status-codes';
 
-export abstract class Base<M> extends Generator<M> implements Route {
+export abstract class Base<M> extends Generator<M> implements AppRoute {
   // *** Basic Route Details ***
   readonly router: Router;
   readonly path: string;
   // *** For more Implementation ***
-  protected readonly beforeGet?: RequestHandler;
-  protected readonly beforeGetAll?: RequestHandler;
-  protected readonly beforePost?: RequestHandler;
-  protected readonly beforePostSoft?: RequestHandler;
-  protected readonly beforePatch?: RequestHandler;
-  protected readonly beforePatchSoft?: RequestHandler;
-  protected readonly beforePut?: RequestHandler;
-  protected readonly beforePutSoft?: RequestHandler;
-  protected readonly afterGet?: RequestHandler;
-  protected readonly afterGetAll?: RequestHandler;
-  protected readonly afterPost?: RequestHandler;
-  protected readonly afterPostSoft?: RequestHandler;
-  protected readonly afterPatch?: RequestHandler;
-  protected readonly afterPatchSoft?: RequestHandler;
-  protected readonly afterPut?: RequestHandler;
-  protected readonly afterPutSoft?: RequestHandler;
+  protected readonly beforeGet?: AppRequestHandler;
+  protected readonly beforeGetAll?: AppRequestHandler;
+  protected readonly beforePost?: AppRequestHandler;
+  protected readonly beforePostSoft?: AppRequestHandler;
+  protected readonly beforePatch?: AppRequestHandler;
+  protected readonly beforePatchSoft?: AppRequestHandler;
+  protected readonly beforePut?: AppRequestHandler;
+  protected readonly beforePutSoft?: AppRequestHandler;
+  protected readonly afterGet?: AppRequestHandler;
+  protected readonly afterGetAll?: AppRequestHandler;
+  protected readonly afterPost?: AppRequestHandler;
+  protected readonly afterPostSoft?: AppRequestHandler;
+  protected readonly afterPatch?: AppRequestHandler;
+  protected readonly afterPatchSoft?: AppRequestHandler;
+  protected readonly afterPut?: AppRequestHandler;
+  protected readonly afterPutSoft?: AppRequestHandler;
 
   constructor(private readonly entity: IEntity<M>) {
     super(entity.model);
     this.path = entity.path;
     this.router = Router();
-    this.setUpVerbs();
+    this.normalizeEntityTypes();
   }
-  private readonly noopMiddleWare = (req: IRequest, res: Response, next: NextFunction) => {
+
+  private readonly noopMiddleware = (req: Request, res: Response, next: NextFunction) => {
     if (req.data) {
-      req.status ? res.status(req.status).json(req.data) : res.json(req.data);
+      res.status(req.status ?? StatusCodes.OK).json(req.data);
       delete req.data;
       return;
     }
-    !res.headersSent && next();
+    if (!res.headersSent) {
+      next();
+    }
   };
 
-  private readonly setUpVerbs = () => {
+  private normalizeEntityTypes(): void {
+    if (!this.entity.types) return;
+
     Object.values(ReqTypes).forEach((type) => {
-      if (typeof this.entity?.types?.[type] === 'boolean') {
+      const typeValue = this.entity.types?.[type];
+
+      if (typeof typeValue === 'boolean') {
+        const normalizedType: any = { ONE: typeValue };
+
+        if (type === ReqTypes.GET) {
+          normalizedType.ALL = typeValue;
+        } else {
+          normalizedType.ONESOFT = typeValue;
+        }
+
         this.entity.types = {
-          ...this.entity?.types,
-          [type]: {
-            ONE: !!this.entity?.types?.[type],
-            ...(type === ReqTypes.GET && { ALL: !!this.entity?.types?.[type] }),
-            ...(type !== ReqTypes.GET && { ONESOFT: !!this.entity?.types?.[type] }),
-          },
+          ...this.entity.types,
+          [type]: normalizedType,
         };
       }
     });
-  };
+  }
 
   getModel() {
     return this.entity.model;
   }
 
-  protected readonly setRouter = () => {
+  protected setRouter(): void {
     this.setGetRoutes();
     this.setPostRoutes();
     this.setPatchRoutes();
     this.setPutRoutes();
-  };
+  }
 
-  private setGetRoutes() {
-    if (typeof this.entity?.types?.GET === 'object') {
-      this.entity?.types?.GET?.ALL &&
-        this.router
-          .route(`${this.path}`)
-          .get(this.beforeGetAll ?? this.noopMiddleWare, this.getAllRoute, this.afterGetAll ?? this.noopMiddleWare);
-      this.entity?.types?.GET?.ONE &&
-        this.router
-          .route(`${this.path}/:id`)
-          .get(this.beforeGet ?? this.noopMiddleWare, this.getOneRoute, this.afterGet ?? this.noopMiddleWare);
+  private setGetRoutes(): void {
+    const getTypes = this.entity?.types?.GET;
+    if (typeof getTypes !== 'object') return;
+
+    if (getTypes.ALL) {
+      this.router
+        .route(this.path)
+        .get(this.beforeGetAll ?? this.noopMiddleware, this.getAllRoute, this.afterGetAll ?? this.noopMiddleware);
+    }
+
+    if (getTypes.ONE) {
+      this.router
+        .route(`${this.path}/:id`)
+        .get(this.beforeGet ?? this.noopMiddleware, this.getOneRoute, this.afterGet ?? this.noopMiddleware);
     }
   }
 
-  private setPostRoutes() {
-    if (typeof this.entity?.types?.POST === 'object') {
-      this.entity?.types?.POST?.ONE &&
-        this.router
-          .route(`${this.path}`)
-          .post(this.beforePost ?? this.noopMiddleWare, this.createOneRoute, this.afterPost ?? this.noopMiddleWare);
+  private setPostRoutes(): void {
+    const postTypes = this.entity?.types?.POST;
+    if (typeof postTypes !== 'object') return;
 
-      this.entity?.types?.POST?.ONESOFT &&
-        this.router
-          .route(`${this.path}/draft`)
-          .post(
-            this.beforePostSoft ?? this.noopMiddleWare,
-            this.createOneRoute,
-            this.afterPostSoft ?? this.noopMiddleWare,
-          );
+    if (postTypes.ONE) {
+      this.router
+        .route(this.path)
+        .post(this.beforePost ?? this.noopMiddleware, this.createOneRoute, this.afterPost ?? this.noopMiddleware);
+    }
+
+    if (postTypes.ONESOFT) {
+      this.router
+        .route(`${this.path}/draft`)
+        .post(
+          this.beforePostSoft ?? this.noopMiddleware,
+          this.createOneRoute,
+          this.afterPostSoft ?? this.noopMiddleware,
+        );
     }
   }
 
-  private setPatchRoutes() {
-    if (typeof this.entity?.types?.PATCH === 'object') {
-      this.entity?.types?.PATCH?.ONE &&
-        this.router
-          .route(`${this.path}/:id`)
-          .patch(this.beforePatch ?? this.noopMiddleWare, this.updateOneRoute, this.afterPatch ?? this.noopMiddleWare);
+  private setPatchRoutes(): void {
+    const patchTypes = this.entity?.types?.PATCH;
+    if (typeof patchTypes !== 'object') return;
 
-      this.entity?.types?.PATCH?.ONESOFT &&
-        this.router
-          .route(`${this.path}/:id/draft`)
-          .patch(
-            this.beforePatchSoft ?? this.noopMiddleWare,
-            this.updateOneRoute,
-            this.afterPatchSoft ?? this.noopMiddleWare,
-          );
+    if (patchTypes.ONE) {
+      this.router
+        .route(`${this.path}/:id`)
+        .patch(this.beforePatch ?? this.noopMiddleware, this.updateOneRoute, this.afterPatch ?? this.noopMiddleware);
+    }
+
+    if (patchTypes.ONESOFT) {
+      this.router
+        .route(`${this.path}/:id/draft`)
+        .patch(
+          this.beforePatchSoft ?? this.noopMiddleware,
+          this.updateOneRoute,
+          this.afterPatchSoft ?? this.noopMiddleware,
+        );
     }
   }
 
-  private setPutRoutes() {
-    if (typeof this.entity?.types?.PUT === 'object') {
-      this.entity?.types?.PUT?.ONE &&
-        this.router
-          .route(`${this.path}/:id`)
-          .put(this.beforePut ?? this.noopMiddleWare, this.updateOneRoute, this.afterPut ?? this.noopMiddleWare);
+  private setPutRoutes(): void {
+    const putTypes = this.entity?.types?.PUT;
+    if (typeof putTypes !== 'object') return;
 
-      this.entity?.types?.PUT?.ONESOFT &&
-        this.router
-          .route(`${this.path}/:id/draft`)
-          .put(
-            this.beforePutSoft ?? this.noopMiddleWare,
-            this.updateOneRoute,
-            this.afterPutSoft ?? this.noopMiddleWare,
-          );
+    if (putTypes.ONE) {
+      this.router
+        .route(`${this.path}/:id`)
+        .put(this.beforePut ?? this.noopMiddleware, this.updateOneRoute, this.afterPut ?? this.noopMiddleware);
+    }
+
+    if (putTypes.ONESOFT) {
+      this.router
+        .route(`${this.path}/:id/draft`)
+        .put(this.beforePutSoft ?? this.noopMiddleware, this.updateOneRoute, this.afterPutSoft ?? this.noopMiddleware);
     }
   }
 }

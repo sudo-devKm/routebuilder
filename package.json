@@ -6,10 +6,11 @@
   "scripts": {
     "build": "rimraf ./dist && tsc && tsc-alias",
     "start": "npm run build && node dist/index.js",
-    "lint": "eslint --ignore-path .gitignore --ext .ts src/",
+    "lint": "eslint .gitignore --ext .ts src/",
     "lint:fix": "npm run lint -- --fix",
     "dev": "nodemon src/index.ts",
-    "prepare": "husky install"
+    "test": "npm run lint",
+    "prepare": "husky"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
@@ -23,6 +24,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@mongodb-js/zstd": "^7.0.0",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -36,6 +38,8 @@
     "lodash": "^4.17.21",
     "mongoose": "^9.1.1",
     "morgan": "^1.10.1",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0",
     "zod": "^4.2.1"
   },
   "devDependencies": {
@@ -51,14 +55,15 @@
     "@typescript-eslint/parser": "^8.51.0",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "nodemon": "^3.1.11",
     "prettier": "^3.7.4",
     "rimraf": "^6.1.2",
-    "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }

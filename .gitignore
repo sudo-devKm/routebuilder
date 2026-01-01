@@ -1,10 +1,21 @@
 # Default Packages
-/node_modules
-dist
-.dbdata
+node_modules/
+
+# build
+dist/
+build
+
+# editor configuration
 .vscode
+!.vscode/lunch.json
+
+# Package lock file
 package-lock.json
-# ENV 
+
+# secrets  
 .env
-.env.development
-.env.production
+.env.*
+!.env.example
+
+# logs folder
+logs/

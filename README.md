@@ -14,8 +14,9 @@ A robust and scalable Node.js REST API boilerplate built with TypeScript, Expres
 - **Environment Configuration** - Type-safe environment variables with Envalid
 - **Code Quality** - ESLint, Prettier, and Husky for code consistency
 - **Development Tools** - Hot-reload with Nodemon, path aliases with tsc-alias
-- **Logging** - Request logging with Morgan
+- **Logging** - Request logging with Morgan and custom logger utility
 - **Docker Support** - Docker Compose setup with MongoDB
+- **Graceful Shutdown** - Handles SIGTERM, SIGINT, unhandled exceptions, and closes DB connections cleanly
 
 ## 📋 Prerequisites
 
@@ -116,6 +117,16 @@ npm start
 - `npm run lint` - Run ESLint
 - `npm run lint:fix` - Fix ESLint errors automatically
 
+## 🛑 Graceful Shutdown & Signal Handling
+
+The application is designed to handle process signals and unexpected errors gracefully:
+
+- **SIGTERM** and **SIGINT** (e.g., Ctrl+C) are caught to perform a clean shutdown.
+- **Unhandled Promise Rejections** and **Uncaught Exceptions** are logged and trigger cleanup.
+- **Database Connection** is closed before the process exits.
+
+No manual intervention is needed—these are handled automatically by the app. You will see shutdown logs in the console when the app is stopped or crashes.
+
 ## 📁 Project Structure
 
 ```
@@ -126,13 +137,10 @@ npm start
 │   │   └── global/
 │   ├── config/                     # Configuration files
 │   │   └── index.ts                # Environment variables
-│   ├── database/                   # Database connection
-│   │   └── dbConnect.ts
 │   ├── exceptions/                 # Custom exception classes
 │   │   └── http.exception.ts
-│   ├── interfaces/                 # TypeScript interfaces
-│   │   └── route.interface.ts
-│   ├── lib/
+│   ├── lib/                        # Shared libraries (logger, route-builder, etc.)
+│   │   ├── logger/                 # Custom logger utility
 │   │   └── route-builder/          # Custom Route Builder Library
 │   │       ├── base.route.ts       # Abstract base route class
 │   │       ├── generator.ts        # CRUD generator
@@ -216,7 +224,7 @@ The Route Builder automatically creates the following endpoints:
 
 ### Customization
 
-You can override default behavior using lifecycle hooks:
+You can override default behavior using lifecycle hooks and rely on the built-in graceful shutdown for resource cleanup:
 
 ```typescript
 class PostsRoute extends Base<typeof PostModel> {

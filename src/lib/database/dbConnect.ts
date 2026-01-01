@@ -1,9 +1,10 @@
 // ============== Import Packages ================
 import mongoose from 'mongoose';
+import logger from '../logger';
 // ===============================================
 export default class MongoConnect {
   static readonly defaultOptions: mongoose.ConnectOptions = {
-    compressors: ['snappy'],
+    compressors: ['zstd'],
   };
 
   constructor() {
@@ -13,13 +14,20 @@ export default class MongoConnect {
   static readonly connect = async (uri: string, options?: mongoose.ConnectOptions) => {
     try {
       mongoose.set('strictQuery', true);
-      const connection = await mongoose.connect(uri, {
-        ...this.defaultOptions,
-        ...options,
-      });
-      process.stdout.write('Connected successfully to Database !! :) \n');
+      await mongoose.connect(uri, { ...this.defaultOptions, ...options });
+      logger.info('Connected successfully to Database !! :)');
     } catch (err) {
-      process.stdout.write(`Something Went Wrong !! :( ===> ${err} \n`);
+      logger.error(`Something Went Wrong !!`, err);
+    }
+  };
+
+  static readonly disconnect = async () => {
+    try {
+      await mongoose.disconnect();
+      logger.info('Disconnected successfully from Database !! :)');
+    } catch (err) {
+      logger.error('Error disconnecting from Database !! :(', err);
+      throw err;
     }
   };
 }
