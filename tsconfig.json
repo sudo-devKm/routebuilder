@@ -1,10 +1,15 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compileOnSave": false,
+  "ts-node": {
+    "require": ["tsconfig-paths/register"],
+    "transpileOnly": true
+  },
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["ES2017", "ESNext.asynciterable", "ESNext.AsyncIterable", "ESNext.Promise", "ESNext.BigInt", "ESNext.Intl"],
-    "typeRoots": ["node_modules/@types"],
+    "typeRoots": ["./src/@types", "./node_modules/@types"],
+    "types": ["node"],
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -21,20 +26,18 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "importHelpers": true,
-    "baseUrl": "src",
     "paths": {
-      "*": ["customTypes/*"],
-      "@/*": ["*"],
-      "@lib/*": ["lib/*"],
-      "@config/*": ["config"],
-      "@utils/*": ["utils/*"],
-      "@types/*": ["types/*"],
-      "@routes/*": ["routes/*"],
-      "@models/*": ["models/*"],
-      "@constants/*": ["constants/*"],
-      "@interfaces/*": ["interfaces/*"],
-      "@exceptions/*": ["exceptions/*"],
-      "@middlewares/*": ["middlewares/*"]
+      "@/*": ["./src/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@config/*": ["./src/config"],
+      "@utils/*": ["./src/utils/*"],
+      "@types/*": ["./src/types/*"],
+      "@routes/*": ["./src/routes/*"],
+      "@models/*": ["./src/models/*"],
+      "@constants/*": ["./src/constants/*"],
+      "@interfaces/*": ["./src/interfaces/*"],
+      "@exceptions/*": ["./src/exceptions/*"],
+      "@middlewares/*": ["./src/middlewares/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.json", ".env"],

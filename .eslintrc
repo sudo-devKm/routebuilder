@@ -1,14 +1,14 @@
 {
   "env": {
     "es2021": true,
-    "node": true
+    "node": true,
   },
   "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:prettier/recommended", "airbnb"],
   "overrides": [],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": "latest",
-    "sourceType": "module"
+    "sourceType": "module",
   },
   "plugins": ["@typescript-eslint"],
   "rules": {
@@ -48,7 +48,7 @@
     "operator-linebreak": "off",
     "indent": "off",
     "no-shadow": "off",
-    "@typescript-eslint/no-shadow": ["error", { "ignoreTypeValueShadow": true }]
+    "@typescript-eslint/no-shadow": ["error", { "ignoreTypeValueShadow": true }],
   },
-  "ignorePatterns": ["src/**/*.test.ts"]
+  "ignorePatterns": ["src/**/*.test.ts"],
 }

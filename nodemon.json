@@ -2,5 +2,5 @@
   "ignore": [".git", "node_modules/", "dist/", "coverage/"],
   "watch": ["src/*", "dist/*"],
   "ext": "js,ts,json",
-  "exec": "ts-node -r tsconfig-paths/register"
+  "exec": "ts-node"
 }

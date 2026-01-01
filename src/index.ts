@@ -1,6 +1,9 @@
 import App from './app';
-import { PostRoute } from './routes/posts/posts.route';
+import Routes from '@/routes';
 
-const app = new App([new PostRoute()]);
+const bootstrap = async () => {
+    const application = new App(Routes);
+    await application.listen();
+};
 
-app.listen();
+bootstrap();
